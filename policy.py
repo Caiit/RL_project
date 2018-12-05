@@ -4,7 +4,7 @@ import gym
 import random
 
 class PolicyNetwork(nn.Module):
-    
+
     def __init__(self, state_size=4, action_size=2, num_hidden=128):
         nn.Module.__init__(self)
         self.l1 = nn.Linear(state_size, num_hidden)
@@ -31,7 +31,8 @@ def select_action(model, state, epsilon):
 def main():
 	env = gym.envs.make("CartPole-v0")
 	model = PolicyNetwork(4,2)
-	s = env.reset() 
+	s = env.reset()
 	a = select_action(model, s, 0.05)
+
 if __name__ == "__main__":
-    main()    
+    main()
