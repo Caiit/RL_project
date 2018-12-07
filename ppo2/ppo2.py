@@ -2,15 +2,15 @@ import os
 import time
 import numpy as np
 import os.path as osp
-from baselines import logger
+import logger
 from collections import deque
-from baselines.common import explained_variance, set_global_seeds
-from baselines.common.policies import build_policy
+from common import explained_variance, set_global_seeds
+from common.policies import build_policy
 try:
     from mpi4py import MPI
 except ImportError:
     MPI = None
-from baselines.ppo2.runner import Runner
+from ppo2.runner import Runner
 
 
 def constfn(val):
@@ -18,7 +18,7 @@ def constfn(val):
         return val
     return f
 
-def learn(*, network, env, total_timesteps, eval_env = None, seed=None, nsteps=2048, ent_coef=0.0, lr=3e-4,
+def learn(*, network, env, total_timesteps, start_actions=[], eval_env = None, seed=None, nsteps=2048, ent_coef=0.0, lr=3e-4,
             vf_coef=0.5,  max_grad_norm=0.5, gamma=0.99, lam=0.95,
             log_interval=10, nminibatches=4, noptepochs=4, cliprange=0.2,
             save_interval=0, load_path=None, model_fn=None, **network_kwargs):
@@ -100,17 +100,17 @@ def learn(*, network, env, total_timesteps, eval_env = None, seed=None, nsteps=2
 
     # Instantiate the model object (that creates act_model and train_model)
     if model_fn is None:
-        from baselines.ppo2.model import Model
+        from ppo2.model import Model
         model_fn = Model
 
     model = model_fn(policy=policy, ob_space=ob_space, ac_space=ac_space, nbatch_act=nenvs, nbatch_train=nbatch_train,
-                    nsteps=nsteps, ent_coef=ent_coef, vf_coef=vf_coef,
-                    max_grad_norm=max_grad_norm)
+                     nsteps=nsteps, ent_coef=ent_coef, vf_coef=vf_coef,
+                     max_grad_norm=max_grad_norm)
 
     if load_path is not None:
         model.load(load_path)
     # Instantiate the runner object
-    runner = Runner(env=env, model=model, nsteps=nsteps, gamma=gamma, lam=lam)
+    runner = Runner(env=env, model=model, nsteps=nsteps, gamma=gamma, lam=lam, start_actions=start_actions)
     if eval_env is not None:
         eval_runner = Runner(env = eval_env, model = model, nsteps = nsteps, gamma = gamma, lam= lam)
 

@@ -27,6 +27,7 @@ class DummyVecEnv(VecEnv):
         self.buf_rews  = np.zeros((self.num_envs,), dtype=np.float32)
         self.buf_infos = [{} for _ in range(self.num_envs)]
         self.actions = None
+        self.start_actions = []
 
     def step_async(self, actions):
         listify = True
@@ -47,17 +48,28 @@ class DummyVecEnv(VecEnv):
             action = self.actions[e]
             if isinstance(self.envs[e].action_space, spaces.Discrete):
                 action = int(action)
-
             obs, self.buf_rews[e], self.buf_dones[e], self.buf_infos[e] = self.envs[e].step(action)
             if self.buf_dones[e]:
-                obs = self.envs[e].reset()
+                self.reset()
+                # obs = self.envs[e].reset()
             self._save_obs(e, obs)
         return (self._obs_from_buf(), np.copy(self.buf_rews), np.copy(self.buf_dones),
                 self.buf_infos.copy())
 
     def reset(self):
+        if len(self.start_actions) > 0:
+            return self.reset_to_start_point()
         for e in range(self.num_envs):
             obs = self.envs[e].reset()
+            self._save_obs(e, obs)
+        return self._obs_from_buf()
+
+    def reset_to_start_point(self):
+        for e in range(self.num_envs):
+            obs = self.envs[e].reset()
+            for a in self.start_actions:
+                obs, self.buf_rews[e], self.buf_dones[e], self.buf_infos[e] = self.envs[e].step(a)
+                assert not self.buf_dones[e], "You started with a finished env."
             self._save_obs(e, obs)
         return self._obs_from_buf()
 

@@ -1,5 +1,5 @@
 import numpy as np
-from baselines.common.runners import AbstractEnvRunner
+from common.runners import AbstractEnvRunner
 
 class Runner(AbstractEnvRunner):
     """
@@ -10,12 +10,16 @@ class Runner(AbstractEnvRunner):
     run():
     - Make a mini batch
     """
-    def __init__(self, *, env, model, nsteps, gamma, lam):
+    def __init__(self, *, env, model, nsteps, gamma, lam, start_actions):
         super().__init__(env=env, model=model, nsteps=nsteps)
         # Lambda used in GAE (General Advantage Estimation)
         self.lam = lam
         # Discount rate
         self.gamma = gamma
+        # Add starting point if defined
+        if len(start_actions) > 0:
+            self.env.start_actions = start_actions
+            self.env.reset()
 
     def run(self):
         # Here, we init the lists that will contain the mb of experiences
@@ -64,7 +68,7 @@ class Runner(AbstractEnvRunner):
             mb_advs[t] = lastgaelam = delta + self.gamma * self.lam * nextnonterminal * lastgaelam
         mb_returns = mb_advs + mb_values
         return (*map(sf01, (mb_obs, mb_returns, mb_dones, mb_actions, mb_values, mb_neglogpacs)),
-            mb_states, epinfos)
+                mb_states, epinfos)
 # obs, returns, masks, actions, values, neglogpacs, states = runner.run()
 def sf01(arr):
     """

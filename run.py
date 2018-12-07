@@ -10,10 +10,10 @@ from common.vec_env.vec_video_recorder import VecVideoRecorder
 from common.vec_env.vec_frame_stack import VecFrameStack
 from common.cmd_util import common_arg_parser, parse_unknown_args, make_vec_env, make_env
 from common.tf_util import get_session
-from baselines import logger
+import logger
 from importlib import import_module
 
-from baselines.common.vec_env.vec_normalize import VecNormalize
+from common.vec_env.vec_normalize import VecNormalize
 
 from start_states import get_start_state
 
@@ -66,10 +66,9 @@ def train(args, extra_args):
     alg_kwargs.update(extra_args)
 
     env = build_env(args)
+    start_actions = None
     if args.demo:
-        start_state = get_start_state(env, args.env, args.start_n)
-        env.state = start_state
-
+        start_actions = get_start_state(env, args.env, args.start_n)
     if args.save_video_interval != 0:
         env = VecVideoRecorder(env, osp.join(logger.Logger.CURRENT.dir, "videos"), record_video_trigger=lambda x: x % args.save_video_interval == 0, video_length=args.save_video_length)
 
@@ -79,12 +78,13 @@ def train(args, extra_args):
         if alg_kwargs.get('network') is None:
             alg_kwargs['network'] = get_default_network(env_type)
 
-    print('Training {} on {}:{} with arguments \n{}'.format(args.alg, env_type, env_id, alg_kwargs))
 
+    print('Training {} on {}:{} with arguments \n{}'.format(args.alg, env_type, env_id, alg_kwargs))
     model = learn(
         env=env,
         seed=seed,
         total_timesteps=total_timesteps,
+        start_actions=start_actions,
         **alg_kwargs
     )
 
@@ -150,7 +150,8 @@ def get_alg_module(alg, submodule=None):
     submodule = submodule or alg
     try:
         # first try to import the alg module from baselines
-        alg_module = import_module('.'.join(['baselines', alg, submodule]))
+        # alg_module = import_module('.'.join(['baselines', alg, submodule]))
+        alg_module = import_module('.'.join([alg, submodule]))
     except ImportError:
         # then from rl_algs
         alg_module = import_module('.'.join(['rl_' + 'algs', alg, submodule]))
@@ -212,6 +213,10 @@ def main(args):
     if args.play:
         logger.log("Running trained model")
         env = build_env(args)
+        # Start at start state
+        if args.demo:
+            env.start_actions = get_start_state(env, args.env, args.start_n)
+
         obs = env.reset()
         def initialize_placeholders(nlstm=128,**kwargs):
             return np.zeros((args.num_env or 1, 2*nlstm)), np.zeros((1))
