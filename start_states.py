@@ -18,7 +18,7 @@ def get_start_state(env, env_name, start_n):
         return env.env.state
     elif env_name == "Freeway-ramDeterministic-v0":
         states = np.load('states_freeway.npy')
-        restored = env.env.restore_store(states[start])
+        restored = states[start]
         return restored
     return None
 

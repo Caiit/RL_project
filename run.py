@@ -68,7 +68,12 @@ def train(args, extra_args):
     env = build_env(args)
     if args.demo:
         start_state = get_start_state(env, args.env, args.start_n)
-        env.state = start_state
+        if args.env == 'Freeway-ram-v0':
+            env.env.state = env.env.restore_state(start_state)
+        elif args.env == 'FrozenLake-v0':
+            env.env.s = start_state
+        elif args.env == 'MountainCar-v0':
+            env.env.state = start_state
 
     if args.save_video_interval != 0:
         env = VecVideoRecorder(env, osp.join(logger.Logger.CURRENT.dir, "videos"), record_video_trigger=lambda x: x % args.save_video_interval == 0, video_length=args.save_video_length)
