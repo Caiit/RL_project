@@ -36,7 +36,21 @@ def get_start_state(env, env_name, start_n):
             states.append(observation[0])
         env.state = states[int(len(states) / 10) * start_n]
         return env.state
-    return None 
+    return None
+    # TODO: check if this still works
+    # if env_name == "FrozenLake-v0":
+    #     states = env_demo[env_name]
+    #     env.env.s = states[start_n]
+    #     return env.env.s
+    # elif env_name == "MountainCarContinuous-v0":
+    #     states = np.load('states_mountaincar.npy')
+    #     env.env.state = states[start]
+    #     return env.env.state
+    # elif env_name == "Freeway-ramDeterministic-v0":
+    #     states = np.load('states_freeway.npy')
+    #     restored = env.env.restore_store(states[start])
+    #     return restored
+    # return None
 
 
 def main(args):
