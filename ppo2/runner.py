@@ -10,15 +10,15 @@ class Runner(AbstractEnvRunner):
     run():
     - Make a mini batch
     """
-    def __init__(self, *, env, model, nsteps, gamma, lam, start_actions):
+    def __init__(self, *, env, model, nsteps, gamma, lam, starting_position):
         super().__init__(env=env, model=model, nsteps=nsteps)
         # Lambda used in GAE (General Advantage Estimation)
         self.lam = lam
         # Discount rate
         self.gamma = gamma
         # Add starting point if defined
-        if len(start_actions) > 0:
-            self.env.start_actions = start_actions
+        if starting_position is not None:
+            self.env.starting_position = starting_position
             self.env.reset()
 
     def run(self):

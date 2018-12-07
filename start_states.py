@@ -1,5 +1,6 @@
 import gym
 import argparse
+import numpy as np
 
 
 def get_start_state(env, env_name, start_n):
@@ -8,49 +9,22 @@ def get_start_state(env, env_name, start_n):
     # n=9 means we start in the end of a rollout
     env.reset()
     env_demo = {"FrozenLake-v0": [4, 8, 9, 13, 14], 
-        "MountainCar-v0":[0]*50 + [2]*30 + [0]*50 + [2]*60,
+        "MountainCar-v0":[0]*50 + [2]*30 + [0]*50 + [2]*50,
         "Freeway-ramDeterministic-v0": [1]*43}
 
     if env_name == "FrozenLake-v0":
         states = env_demo[env_name]
-        env.s = states[start_n]
-        return env.s
+        return states[min(start_n, len(states) - 1)]
     elif env_name == "MountainCar-v0":
-        states = [] 
-        action_list = env_demo[env_name]
-        for i, action in enumerate(action_list):
-            observation = env.step(action)
-            done = observation[2]
-            if done:
-                break
-            states.append(observation[0])
-        env.state = states[min(start_n, i - 1)]
-        return action_list[:min(start_n, i - 1)]
-        # return env.state
-    elif env_name == "Freeway-ramDeterministic-v0":
-        states = []
-        action_list = env_demo[env_name]
-        for action in action_list:
-            observation =  env.step(action)
-            done = observation[2]
-            states.append(observation[0])
-        env.state = states[int(len(states) / 10) * start_n]
+        states = np.load('states_mountaincar.npy')
+        return states[min(start_n, len(states) - 10)]
+    elif env_name == "FreewayNoFrameskip-v0":
+        return None
+        states = np.load('states_freeway.npy')
+        # TODO: not working yet
+        env.state = states[min(start_n, len(states) - 5)]
         return env.state
     return None
-    # TODO: check if this still works
-    # if env_name == "FrozenLake-v0":
-    #     states = env_demo[env_name]
-    #     env.env.s = states[start_n]
-    #     return env.env.s
-    # elif env_name == "MountainCarContinuous-v0":
-    #     states = np.load('states_mountaincar.npy')
-    #     env.env.state = states[start]
-    #     return env.env.state
-    # elif env_name == "Freeway-ramDeterministic-v0":
-    #     states = np.load('states_freeway.npy')
-    #     restored = env.env.restore_store(states[start])
-    #     return restored
-    # return None
 
 
 def main(args):

@@ -27,7 +27,7 @@ class DummyVecEnv(VecEnv):
         self.buf_rews  = np.zeros((self.num_envs,), dtype=np.float32)
         self.buf_infos = [{} for _ in range(self.num_envs)]
         self.actions = None
-        self.start_actions = []
+        self.starting_position = None
 
     def step_async(self, actions):
         listify = True
@@ -57,7 +57,7 @@ class DummyVecEnv(VecEnv):
                 self.buf_infos.copy())
 
     def reset(self):
-        if len(self.start_actions) > 0:
+        if self.starting_position is not None:
             return self.reset_to_start_point()
         for e in range(self.num_envs):
             obs = self.envs[e].reset()
@@ -66,10 +66,9 @@ class DummyVecEnv(VecEnv):
 
     def reset_to_start_point(self):
         for e in range(self.num_envs):
-            obs = self.envs[e].reset()
-            for a in self.start_actions:
-                obs, self.buf_rews[e], self.buf_dones[e], self.buf_infos[e] = self.envs[e].step(a)
-                assert not self.buf_dones[e], "You started with a finished env."
+            self.envs[e].reset()
+            self.envs[e].env.env.state = self.starting_position
+            obs = self.envs[e].env.env.state
             self._save_obs(e, obs)
         return self._obs_from_buf()
 

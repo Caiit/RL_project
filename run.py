@@ -66,9 +66,10 @@ def train(args, extra_args):
     alg_kwargs.update(extra_args)
 
     env = build_env(args)
-    start_actions = None
+    starting_position = None
     if args.demo:
-        start_actions = get_start_state(env, args.env, args.start_n)
+        starting_position = get_start_state(env, args.env, args.start_n)
+
     if args.save_video_interval != 0:
         env = VecVideoRecorder(env, osp.join(logger.Logger.CURRENT.dir, "videos"), record_video_trigger=lambda x: x % args.save_video_interval == 0, video_length=args.save_video_length)
 
@@ -84,7 +85,7 @@ def train(args, extra_args):
         env=env,
         seed=seed,
         total_timesteps=total_timesteps,
-        start_actions=start_actions,
+        starting_position=starting_position,
         **alg_kwargs
     )
 
@@ -215,7 +216,7 @@ def main(args):
         env = build_env(args)
         # Start at start state
         if args.demo:
-            env.start_actions = get_start_state(env, args.env, args.start_n)
+            env.starting_position = get_start_state(env, args.env, args.start_n)
 
         obs = env.reset()
         def initialize_placeholders(nlstm=128,**kwargs):
