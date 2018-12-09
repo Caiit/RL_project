@@ -2,15 +2,16 @@ import os
 import time
 import numpy as np
 import os.path as osp
-from baselines import logger
+import logger
+from start_states import get_start_state, get_all_states
 from collections import deque
-from baselines.common import explained_variance, set_global_seeds
-from baselines.common.policies import build_policy
+from common import explained_variance, set_global_seeds
+from common.policies import build_policy
 try:
     from mpi4py import MPI
 except ImportError:
     MPI = None
-from baselines.ppo2.runner import Runner
+from  ppo2.runner import Runner
 
 
 def constfn(val):
@@ -18,7 +19,7 @@ def constfn(val):
         return val
     return f
 
-def learn(*, network, env, total_timesteps, eval_env = None, seed=None, nsteps=2048, ent_coef=0.0, lr=3e-4,
+def learn(*, network, env, total_timesteps, start_n, env_name, eval_env = None, seed=None, nsteps=2048, ent_coef=0.0, lr=3e-4,
             vf_coef=0.5,  max_grad_norm=0.5, gamma=0.99, lam=0.95,
             log_interval=10, nminibatches=4, noptepochs=4, cliprange=0.2,
             save_interval=0, load_path=None, model_fn=None, **network_kwargs):
@@ -100,7 +101,7 @@ def learn(*, network, env, total_timesteps, eval_env = None, seed=None, nsteps=2
 
     # Instantiate the model object (that creates act_model and train_model)
     if model_fn is None:
-        from baselines.ppo2.model import Model
+        from ppo2.model import Model
         model_fn = Model
 
     model = model_fn(policy=policy, ob_space=ob_space, ac_space=ac_space, nbatch_act=nenvs, nbatch_train=nbatch_train,
@@ -132,10 +133,14 @@ def learn(*, network, env, total_timesteps, eval_env = None, seed=None, nsteps=2
         # Calculate the cliprange
         cliprangenow = cliprange(frac)
         # Get minibatch
+        print('BONJJJJJJJJJJJJJJJJJJ')
+        start_state = get_start_state(env, env_name, start_n)
+        runner.env.envs[0].env.env.state = start_state
         obs, returns, masks, actions, values, neglogpacs, states, epinfos = runner.run() #pylint: disable=E0632
         if eval_env is not None:
+            eval_env.render()
             eval_obs, eval_returns, eval_masks, eval_actions, eval_values, eval_neglogpacs, eval_states, eval_epinfos = eval_runner.run() #pylint: disable=E0632
-
+            eval_env.close()
         epinfobuf.extend(epinfos)
         if eval_env is not None:
             eval_epinfobuf.extend(eval_epinfos)
@@ -206,6 +211,3 @@ def learn(*, network, env, total_timesteps, eval_env = None, seed=None, nsteps=2
 # Avoid division error when calculate the mean (in our case if epinfo is empty returns np.nan, not return an error)
 def safemean(xs):
     return np.nan if len(xs) == 0 else np.mean(xs)
-
-
-

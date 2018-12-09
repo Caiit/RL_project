@@ -68,7 +68,6 @@ def train(args, extra_args, state_i):
     env = build_env(args)
     if args.demo:
         env_2 = env.envs[0].env
-        print(type(env_2.env.state))
         start_state = get_start_state(env_2, args.env, state_i)
         if args.env == 'Freeway-ram-v0':
             env_2.env.state = env.env.restore_state(start_state)
@@ -90,7 +89,7 @@ def train(args, extra_args, state_i):
 
     model = learn(
         env=env,
-        seed=seed,
+        seed=seed, start_n=state_i, env_name=args.env,
         total_timesteps=total_timesteps,
         **alg_kwargs
     )

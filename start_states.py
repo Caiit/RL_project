@@ -17,13 +17,13 @@ def get_start_state(env, env_name, start_n):
 
     if env_name == "FrozenLake-v0":
         states = env_demo[env_name]
-        env.env.s = states[start_n]
-        return env.env.s
+        #env.env.s = states[start_n]
+        return states[start_n]
     elif env_name == "MountainCar-v0":
         states = np.load('states_mountaincar.npy')
         print(len(states))
-        env.env.state = states[start_n]
-        return env.env.state
+        #env.env.state = states[start_n]
+        return states[start_n]
     elif env_name == "Freeway-ramDeterministic-v0":
         states = np.load('states_freeway.npy')
         restored = states[start_n]
