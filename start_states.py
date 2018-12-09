@@ -1,24 +1,32 @@
 import gym
 import argparse
+import numpy as np
+
+def get_all_states(env_name):
+    env_demo = {"FrozenLake-v0": [4, 8, 9, 13, 14],
+        "MountainCar-v0":[0]*50 + [2]*30 + [0]*50 + [2]*40,
+        "Freeway-ramDeterministic-v0": [1]*43}
+    return env_demo[env_name]
 
 
 def get_start_state(env, env_name, start_n):
     env.reset()
     env_demo = {"FrozenLake-v0": [4, 8, 9, 13, 14],
-        "MountainCarContinuous-v0":[0]*50 + [2]*30 + [0]*50 + [2]*60,
+        "MountainCar-v0":[0]*50 + [2]*30 + [0]*50 + [2]*40,
         "Freeway-ramDeterministic-v0": [1]*43}
 
     if env_name == "FrozenLake-v0":
         states = env_demo[env_name]
         env.env.s = states[start_n]
         return env.env.s
-    elif env_name == "MountainCarContinuous-v0":
+    elif env_name == "MountainCar-v0":
         states = np.load('states_mountaincar.npy')
-        env.env.state = states[start]
+        print(len(states))
+        env.env.state = states[start_n]
         return env.env.state
     elif env_name == "Freeway-ramDeterministic-v0":
         states = np.load('states_freeway.npy')
-        restored = states[start]
+        restored = states[start_n]
         return restored
     return None
 

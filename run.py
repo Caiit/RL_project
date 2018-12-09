@@ -10,12 +10,12 @@ from common.vec_env.vec_video_recorder import VecVideoRecorder
 from common.vec_env.vec_frame_stack import VecFrameStack
 from common.cmd_util import common_arg_parser, parse_unknown_args, make_vec_env, make_env
 from common.tf_util import get_session
-from baselines import logger
+import logger
 from importlib import import_module
 
-from baselines.common.vec_env.vec_normalize import VecNormalize
+from common.vec_env.vec_normalize import VecNormalize
 
-from start_states import get_start_state
+from start_states import get_start_state, get_all_states
 
 
 try:
@@ -54,7 +54,7 @@ _game_envs['retro'] = {
 }
 
 
-def train(args, extra_args):
+def train(args, extra_args, state_i):
     env_type, env_id = get_env_type(args.env)
     print('env_type: {}'.format(env_type))
 
@@ -67,13 +67,15 @@ def train(args, extra_args):
 
     env = build_env(args)
     if args.demo:
-        start_state = get_start_state(env, args.env, args.start_n)
+        env_2 = env.envs[0].env
+        print(type(env_2.env.state))
+        start_state = get_start_state(env_2, args.env, state_i)
         if args.env == 'Freeway-ram-v0':
-            env.env.state = env.env.restore_state(start_state)
+            env_2.env.state = env.env.restore_state(start_state)
         elif args.env == 'FrozenLake-v0':
-            env.env.s = start_state
+            env_2.env.s = start_state
         elif args.env == 'MountainCar-v0':
-            env.env.state = start_state
+            env_2.env.state = start_state
 
     if args.save_video_interval != 0:
         env = VecVideoRecorder(env, osp.join(logger.Logger.CURRENT.dir, "videos"), record_video_trigger=lambda x: x % args.save_video_interval == 0, video_length=args.save_video_length)
@@ -155,7 +157,7 @@ def get_alg_module(alg, submodule=None):
     submodule = submodule or alg
     try:
         # first try to import the alg module from baselines
-        alg_module = import_module('.'.join(['baselines', alg, submodule]))
+        alg_module = import_module('.'.join([alg, submodule]))
     except ImportError:
         # then from rl_algs
         alg_module = import_module('.'.join(['rl_' + 'algs', alg, submodule]))
@@ -207,8 +209,17 @@ def main(args):
         logger.configure(format_strs=[])
         rank = MPI.COMM_WORLD.Get_rank()
 
-    model, env = train(args, extra_args)
-    env.close()
+    states_list = get_all_states(args.env)
+    if args.env == 'FrozenLake-v0':
+        states_list = [i for i in range(len(states_list))]
+    else:
+        states_list = [i for i in range(0, len(states_list)-1, 10)]
+    print(states_list)
+
+    for state_i in states_list:
+        print(state_i)
+        model, env = train(args, extra_args, state_i)
+        env.close()
 
     if args.save_path is not None and rank == 0:
         save_path = osp.expanduser(args.save_path)
