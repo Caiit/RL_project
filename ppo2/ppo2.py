@@ -18,7 +18,7 @@ def constfn(val):
         return val
     return f
 
-def learn(*, network, env, total_timesteps, starting_position=None, eval_env = None, seed=None, nsteps=2048, ent_coef=0.0, lr=3e-4,
+def learn(*, network, env, total_timesteps, starting_positions, env_name, eval_env = None, seed=None, nsteps=2048, ent_coef=0.0, lr=3e-4,
             vf_coef=0.5,  max_grad_norm=0.5, gamma=0.99, lam=0.95,
             log_interval=10, nminibatches=4, noptepochs=4, cliprange=0.2,
             save_interval=0, load_path=None, model_fn=None, **network_kwargs):
@@ -109,10 +109,12 @@ def learn(*, network, env, total_timesteps, starting_position=None, eval_env = N
 
     if load_path is not None:
         model.load(load_path)
+    current_starting_position = starting_positions.pop()
+
     # Instantiate the runner object
-    runner = Runner(env=env, model=model, nsteps=nsteps, gamma=gamma, lam=lam, starting_position=starting_position)
+    runner = Runner(env=env, model=model, nsteps=nsteps, gamma=gamma, lam=lam, starting_position=current_starting_position)
     if eval_env is not None:
-        eval_runner = Runner(env = eval_env, model = model, nsteps = nsteps, gamma = gamma, lam= lam, starting_position=starting_position)
+        eval_runner = Runner(env = eval_env, model = model, nsteps = nsteps, gamma = gamma, lam= lam, starting_position=current_starting_position)
 
     epinfobuf = deque(maxlen=100)
     if eval_env is not None:
@@ -135,6 +137,23 @@ def learn(*, network, env, total_timesteps, starting_position=None, eval_env = N
         obs, returns, masks, actions, values, neglogpacs, states, epinfos = runner.run() #pylint: disable=E0632
         if eval_env is not None:
             eval_obs, eval_returns, eval_masks, eval_actions, eval_values, eval_neglogpacs, eval_states, eval_epinfos = eval_runner.run() #pylint: disable=E0632
+
+        if env_name == "MountainCar-v0":
+            done_obs = obs[masks]
+            # Number of episodes past
+            n_eps = done_obs.shape[0]
+            # Reached goal if pos is > 0.5
+            n_goal_reached = (done_obs[:, 0] >= 0.5).sum()
+
+            if (n_goal_reached / n_eps) > 0.2 and len(starting_positions) > 0:
+                current_starting_position = starting_positions.pop()
+
+                runner.env.starting_position = current_starting_position
+                if eval_env is not None:
+                    eval_runner.env.starting_position = current_starting_position
+        elif env_name == "FreewayNoFrameskip-v0":
+            print("No freeway")
+            print("Please fix me")
 
         epinfobuf.extend(epinfos)
         if eval_env is not None:
@@ -206,6 +225,3 @@ def learn(*, network, env, total_timesteps, starting_position=None, eval_env = N
 # Avoid division error when calculate the mean (in our case if epinfo is empty returns np.nan, not return an error)
 def safemean(xs):
     return np.nan if len(xs) == 0 else np.mean(xs)
-
-
-

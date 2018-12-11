@@ -2,13 +2,30 @@ import gym
 import argparse
 import numpy as np
 
+# [min(start_n, len(states) - 1)]
+def get_all_states(env_name):
+    env_demo = {"FrozenLake-v0": [4, 8, 9, 13, 14],
+        "MountainCar-v0":[0]*50 + [2]*30 + [0]*50 + [2]*40,
+        "FreewayNoFrameskip-v0": [1]*43}
+
+    if env_name == "FrozenLake-v0":
+        return env_demo[env_name]
+    elif env_name == "MountainCar-v0":
+        states = np.load('states_mountaincar.npy').tolist()
+        return [states[i] for i in range(0, len(states), 10)]
+    elif env_name == "FreewayNoFrameskip-v0":
+        states = np.load('states_freeway.npy').tolist()
+        return [states[i] for i in range(0, len(states), 2)]
+
+    return None
+
 
 def get_start_state(env, env_name, start_n):
     # Let's define start_n as 10 different states we can start in
     # n=1 means we start in the beginning of a rollout
     # n=9 means we start in the end of a rollout
     env.reset()
-    env_demo = {"FrozenLake-v0": [4, 8, 9, 13, 14], 
+    env_demo = {"FrozenLake-v0": [4, 8, 9, 13, 14],
         "MountainCar-v0":[0]*50 + [2]*30 + [0]*50 + [2]*50,
         "Freeway-ramDeterministic-v0": [1]*43}
 

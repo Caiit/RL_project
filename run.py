@@ -15,7 +15,7 @@ from importlib import import_module
 
 from common.vec_env.vec_normalize import VecNormalize
 
-from start_states import get_start_state
+from start_states import get_all_states
 
 
 try:
@@ -66,9 +66,10 @@ def train(args, extra_args):
     alg_kwargs.update(extra_args)
 
     env = build_env(args)
-    starting_position = None
+    starting_positions = [env.reset()]
     if args.demo:
-        starting_position = get_start_state(env, args.env, args.start_n)
+        starting_positions = get_all_states(args.env)
+        print(len(starting_positions))
 
     if args.save_video_interval != 0:
         env = VecVideoRecorder(env, osp.join(logger.Logger.CURRENT.dir, "videos"), record_video_trigger=lambda x: x % args.save_video_interval == 0, video_length=args.save_video_length)
@@ -85,7 +86,8 @@ def train(args, extra_args):
         env=env,
         seed=seed,
         total_timesteps=total_timesteps,
-        starting_position=starting_position,
+        starting_positions=starting_positions,
+        env_name=args.env,
         **alg_kwargs
     )
 
@@ -216,7 +218,7 @@ def main(args):
         env = build_env(args)
         # Start at start state
         if args.demo:
-            env.starting_position = get_start_state(env, args.env, args.start_n)
+            env.starting_positions = get_all_states(args.env)
 
         obs = env.reset()
         def initialize_placeholders(nlstm=128,**kwargs):
