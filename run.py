@@ -69,7 +69,6 @@ def train(args, extra_args):
     starting_positions = [env.reset()]
     if args.demo:
         starting_positions = get_all_states(args.env)
-        print(len(starting_positions))
 
     if args.save_video_interval != 0:
         env = VecVideoRecorder(env, osp.join(logger.Logger.CURRENT.dir, "videos"), record_video_trigger=lambda x: x % args.save_video_interval == 0, video_length=args.save_video_length)
