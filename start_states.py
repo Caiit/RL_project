@@ -2,7 +2,6 @@ import gym
 import argparse
 import numpy as np
 
-# [min(start_n, len(states) - 1)]
 def get_all_states(env_name):
     env_demo = {"FrozenLake-v0": [4, 8, 9, 13, 14],
         "MountainCar-v0":[0]*50 + [2]*30 + [0]*50 + [2]*40,

@@ -40,16 +40,9 @@ class Runner(AbstractEnvRunner):
             # Take actions in env and look the results
             # Infos contains a ton of useful informations
             self.obs[:], rewards, self.dones, infos = self.env.step(actions)
-            rewards[rewards == -1] = 0
-            if len(self.obs[self.dones]) > 0:
-                rewards[self.obs[self.dones, 0] > 0.5] = 1
             for i, info in enumerate(infos):
                 maybeepinfo = info.get('episode')
-                if maybeepinfo:
-                    maybeepinfo['r'] = 0
-                    if self.dones[i]:
-                        maybeepinfo['r'] = 1
-                    epinfos.append(maybeepinfo)
+                if maybeepinfo: epinfos.append(maybeepinfo)
             mb_rewards.append(rewards)
         #batch of steps to batch of rollouts
         mb_obs = np.asarray(mb_obs, dtype=self.obs.dtype)

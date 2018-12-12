@@ -122,7 +122,8 @@ def learn(*, network, env, total_timesteps, starting_positions, env_name, eval_e
 
     # Start total timer
     tfirststart = time.time()
-    start_change = 0
+    start_changes = []
+    reached_goal = []
 
     nupdates = total_timesteps//nbatch
     for update in range(1, nupdates+1):
@@ -146,8 +147,10 @@ def learn(*, network, env, total_timesteps, starting_positions, env_name, eval_e
             # Reached goal if pos is > 0.5
             n_goal_reached = (done_obs[:, 0] >= 0.5).sum()
 
+            reached_goal.extend([done + update*nsteps - nsteps for done in np.where(done_obs[:, 0] >= 0.5)[0]])
+
             if (n_goal_reached / n_eps) > 0.2 and len(starting_positions) > 0:
-                start_change = update*nsteps
+                start_changes.append(update*nsteps)
                 current_starting_position = starting_positions.pop()
 
                 runner.env.starting_position = current_starting_position
@@ -209,7 +212,8 @@ def learn(*, network, env, total_timesteps, starting_positions, env_name, eval_e
             logger.logkv("explained_variance", float(ev))
             logger.logkv('eprewmean', safemean([epinfo['r'] for epinfo in epinfobuf]))
             logger.logkv('eplenmean', safemean([epinfo['l'] for epinfo in epinfobuf]))
-            logger.logkv('start_change', start_change)
+            logger.logkv('start_changes', "_".join([str(s) for s in start_changes]))
+            logger.logkv('reached_goal', "_".join([str(goal) for goal in reached_goal]))
             if eval_env is not None:
                 logger.logkv('eval_eprewmean', safemean([epinfo['r'] for epinfo in eval_epinfobuf]) )
                 logger.logkv('eval_eplenmean', safemean([epinfo['l'] for epinfo in eval_epinfobuf]) )
