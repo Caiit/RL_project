@@ -87,6 +87,7 @@ def train(args, extra_args):
         total_timesteps=total_timesteps,
         starting_positions=starting_positions,
         env_name=args.env,
+        win_percentage=args.win_percentage,
         **alg_kwargs
     )
 

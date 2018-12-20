@@ -18,7 +18,7 @@ def constfn(val):
         return val
     return f
 
-def learn(*, network, env, total_timesteps, starting_positions, env_name, eval_env = None, seed=None, nsteps=2048, ent_coef=0.0, lr=3e-4,
+def learn(*, network, env, total_timesteps, starting_positions, env_name, win_percentage=0.5, eval_env = None, seed=None, nsteps=2048, ent_coef=0.0, lr=3e-4,
             vf_coef=0.5,  max_grad_norm=0.5, gamma=0.99, lam=0.95,
             log_interval=10, nminibatches=4, noptepochs=4, cliprange=0.2,
             save_interval=0, load_path=None, model_fn=None, **network_kwargs):
@@ -149,16 +149,13 @@ def learn(*, network, env, total_timesteps, starting_positions, env_name, eval_e
 
             reached_goal.extend([done + update*nsteps - nsteps for done in np.where(done_obs[:, 0] >= 0.5)[0]])
 
-            if (n_goal_reached / n_eps) > 0.2 and len(starting_positions) > 0:
+            if (n_goal_reached / n_eps) > win_percentage and len(starting_positions) > 0:
                 start_changes.append(update*nsteps)
                 current_starting_position = starting_positions.pop()
 
                 runner.env.starting_position = current_starting_position
                 if eval_env is not None:
                     eval_runner.env.starting_position = current_starting_position
-        elif env_name == "FreewayNoFrameskip-v0":
-            print("No freeway")
-            print("Please fix me")
 
         epinfobuf.extend(epinfos)
         if eval_env is not None:

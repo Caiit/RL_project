@@ -135,6 +135,7 @@ def common_arg_parser():
     parser.add_argument('--save_video_length', help='Length of recorded video. Default: 200', default=200, type=int)
     parser.add_argument('--play', default=False, action='store_true')
     parser.add_argument('--demo', default=False, action='store_true')
+    parser.add_argument('--win_percentage', default=0.5, help='Percentage that have to be won before switching to previous starting state', type=float)
     return parser
 
 def robotics_arg_parser():

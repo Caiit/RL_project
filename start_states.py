@@ -11,7 +11,10 @@ def get_all_states(env_name):
         return env_demo[env_name]
     elif env_name == "MountainCar-v0":
         states = np.load('states_mountaincar.npy').tolist()
-        return [states[i] for i in range(0, len(states), 10)]
+        # For 34 states
+        return [states[i] for i in range(0, len(states), 5)]
+        # For 17 states
+        # return [states[i] for i in range(0, len(states), 10)]
     elif env_name == "FreewayNoFrameskip-v0":
         states = np.load('states_freeway.npy').tolist()
         return [states[i] for i in range(0, len(states), 2)]
@@ -20,9 +23,6 @@ def get_all_states(env_name):
 
 
 def get_start_state(env, env_name, start_n):
-    # Let's define start_n as 10 different states we can start in
-    # n=1 means we start in the beginning of a rollout
-    # n=9 means we start in the end of a rollout
     env.reset()
     env_demo = {"FrozenLake-v0": [4, 8, 9, 13, 14],
         "MountainCar-v0":[0]*50 + [2]*30 + [0]*50 + [2]*50,
